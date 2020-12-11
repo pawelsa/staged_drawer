@@ -29,13 +29,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +40,15 @@ class _MyHomePageState extends State<MyHomePage> {
             Navigator.push(
               context,
               PageRouteBuilder(
-                pageBuilder: (context, animation1, animation2) => StagedDrawer(),
+                pageBuilder: (context, animation1, animation2) => Scaffold(
+                  body: StagedDrawer(
+                    duration: Duration(milliseconds: 2000),
+                    size: widgetList.length,
+                    builder: (context, index) {
+                      return widgetList[index];
+                    },
+                  ),
+                ),
               ),
             );
           },
@@ -60,6 +61,67 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Container(
           color: Colors.lightBlueAccent,
         ),
+      ),
+    );
+  }
+
+  final widgetList = [
+    _buildBigItem(),
+    _buildSmallItem(Icons.home, 'HOME'),
+    _buildSmallItem(Icons.menu, 'FEED'),
+    _buildSmallItem(Icons.message, 'MESSAGES'),
+    _buildSmallItem(Icons.camera_alt, 'PHOTOS'),
+    _buildSmallItem(Icons.place, 'PLACES'),
+    _buildSmallItem(Icons.notifications, 'NOTIFICATIONS'),
+    _buildSmallItem(Icons.person, 'PROFILE'),
+    _buildSmallItem(Icons.camera_alt, 'PHOTOS'),
+    _buildSmallItem(Icons.place, 'PLACES'),
+    _buildSmallItem(Icons.notifications, 'NOTIFICATIONS'),
+    _buildSmallItem(Icons.person, 'PROFILE'),
+    _buildSmallItem(Icons.camera_alt, 'PHOTOS'),
+    _buildSmallItem(Icons.place, 'PLACES'),
+    _buildSmallItem(Icons.notifications, 'NOTIFICATIONS'),
+    _buildSmallItem(Icons.person, 'PROFILE'),
+  ];
+
+  static _buildBigItem() {
+    return Center(
+      child: Container(
+        height: 300,
+        child: Align(
+          alignment: Alignment.bottomLeft,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            child: Text(
+              'MI',
+              style: TextStyle(fontSize: 120),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  static _buildSmallItem(IconData icon, String text) {
+    return Container(
+      height: 72,
+      child: Row(
+        children: <Widget>[
+          Expanded(
+            child: Icon(
+              icon,
+              size: 30,
+            ),
+            flex: 2,
+          ),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+            ),
+            flex: 9,
+          ),
+        ],
       ),
     );
   }

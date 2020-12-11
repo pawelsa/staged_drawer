@@ -1,12 +1,17 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:meta/meta.dart';
 
 class StagedDrawer extends StatefulWidget {
   final Duration duration;
+  final int size;
   final IndexedWidgetBuilder builder;
 
-  const StagedDrawer({Key key, this.duration, @required this.builder}) : super(key: key);
+  const StagedDrawer(
+      {Key key, @required this.duration, this.builder, this.size})
+      : super(key: key);
 
   @override
   _StagedDrawerState createState() => _StagedDrawerState();
@@ -17,17 +22,20 @@ class _StagedDrawerState extends State<StagedDrawer>
   AnimationController _controller;
   Animation _angleAnimation;
   final _perspectiveTween = Tween(begin: 0.001, end: 0.0);
+  final _backgroundColorTween =
+      ColorTween(begin: Colors.orange, end: Colors.yellow);
   final _perspectiveAnimations = <Animation>[];
+  final _backgroundColorAnimations = <Animation>[];
+  bool _reverse = false;
   bool some = false;
 
   @override
   void initState() {
     super.initState();
 
-    _controller =
-        AnimationController(vsync: this, duration: widget.duration);
+    _controller = AnimationController(vsync: this, duration: widget.duration);
     _angleAnimation = Tween(begin: -(pi / 2), end: 0.0).animate(_controller);
-    _buildPerspectiveAnimations(8);
+    _buildAnimationsForListItems(widget.size);
 
     WidgetsBinding.instance.addPostFrameCallback((_) => setState(() {
           some = !some;
@@ -35,104 +43,56 @@ class _StagedDrawerState extends State<StagedDrawer>
         }));
   }
 
-  void _buildPerspectiveAnimations(int count) {
+  void _buildAnimationsForListItems(int count) {
+    final startingPoint = 0.7 / count;
     for (var index = 0; index < count; index++) {
-      _perspectiveAnimations.add(_perspectiveTween.animate(
-        CurvedAnimation(
-          parent: _controller,
-          curve: Interval(
-            0.1 * index,
-            0.1 * index + 0.3,
-            curve: Curves.linear,
-          ),
+      final curveAnimation = CurvedAnimation(
+        parent: _controller,
+        curve: Interval(
+          startingPoint * index,
+          startingPoint * index + 0.3,
+          curve: Curves.linear,
         ),
-      ));
+      );
+      _perspectiveAnimations.add(
+        _perspectiveTween.animate(curveAnimation),
+      );
+      _backgroundColorAnimations.add(
+        _backgroundColorTween.animate(curveAnimation),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // TODO remove scaffold, when it is finished
-    return Scaffold(
-      body: AnimatedBuilder(
+    return WillPopScope(
+      onWillPop: () {
+        _controller.reverse();
+        return Future.delayed(widget.duration, () => true);
+      },
+      child: AnimatedBuilder(
         animation: _controller,
-        builder: (context, _) => ListView(
-          children: <Widget>[
-            _buildBigItem(),
-            _buildItem(1, Icons.home, 'HOME'),
-            _buildItem(2, Icons.menu, 'FEED'),
-            _buildItem(3, Icons.message, 'MESSAGES'),
-            _buildItem(4, Icons.camera_alt, 'PHOTOS'),
-            _buildItem(5, Icons.place, 'PLACES'),
-            _buildItem(6, Icons.notifications, 'NOTIFICATIONS'),
-            _buildItem(7, Icons.person, 'PROFILE'),
-
-            ListView.builder(itemBuilder: (context, index){
-              return _buildAnimation(index, widget.builder(context, index));
-            })
-
-          ],
-        ),
+        builder: (context, index) =>
+            ListView.builder(
+              itemCount: widget.size,
+              itemBuilder: (context, index) {
+                return _buildAnimation(index, widget.builder(context, index));
+              },
+            ),
       ),
     );
   }
 
-  _buildItem(int index, IconData icon, String text) {
-    return _buildAnimation(index, _buildSmallItem(icon, text));
-  }
-
   _buildAnimation(int index, Widget child) {
+    final perspectiveAnimationValue = _perspectiveAnimations[index].value;
     return Transform(
       alignment: FractionalOffset.topLeft,
       transform: Matrix4.identity()
         ..rotateY(_angleAnimation.value)
-        ..setEntry(3, 0, _perspectiveAnimations[index].value),
-      child: AnimatedContainer(
-        duration: Duration(milliseconds: 500 - (7 - index) * 20),
-        color: some ? Colors.yellow : Colors.redAccent,
-        child: child,
-      ),
-    );
-  }
-
-  _buildBigItem() {
-    return Center(
+        ..setEntry(3, 0, perspectiveAnimationValue),
       child: Container(
-        height: 300,
-        child: Align(
-          alignment: Alignment.bottomLeft,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0),
-            child: Text(
-              'MI',
-              style: TextStyle(fontSize: 120),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  _buildSmallItem(IconData icon, String text) {
-    return Container(
-      height: 72,
-      child: Row(
-        children: <Widget>[
-          Expanded(
-            child: Icon(
-              icon,
-              size: 30,
-            ),
-            flex: 2,
-          ),
-          Expanded(
-            child: Text(
-              text,
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-            ),
-            flex: 9,
-          ),
-        ],
+        color: _backgroundColorAnimations[index].value,
+        child: child,
       ),
     );
   }
