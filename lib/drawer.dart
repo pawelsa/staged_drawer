@@ -21,7 +21,7 @@ class _StagedDrawerState extends State<StagedDrawer>
     with SingleTickerProviderStateMixin {
   AnimationController _controller;
   Animation _angleAnimation;
-  final _perspectiveTween = Tween(begin: 0.001, end: 0.0);
+  final _perspectiveTween = Tween(begin: 0.0005, end: 0.0);
   final _backgroundColorTween =
       ColorTween(begin: Colors.orange, end: Colors.yellow);
   final _perspectiveAnimations = <Animation>[];

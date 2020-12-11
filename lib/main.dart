@@ -42,7 +42,7 @@ class _MyHomePageState extends State<MyHomePage> {
               PageRouteBuilder(
                 pageBuilder: (context, animation1, animation2) => Scaffold(
                   body: StagedDrawer(
-                    duration: Duration(milliseconds: 2000),
+                    duration: Duration(milliseconds: 5000),
                     size: widgetList.length,
                     builder: (context, index) {
                       return widgetList[index];
